@@ -32,19 +32,19 @@ def timer(function):
 
 
 def typeassert(*ty_args, **ty_kwargs):
-    def decorate(func):
+    def decorate(function):
         if not __debug__:
-            return func
-        sig = signature(func)
+            return function
+        sig = signature(function)
         bound_types = sig.bind_partial(*ty_args, **ty_kwargs).arguments
-        @wraps
+        @wraps(function)
         def wrapper(*args, **kwargs):
             bound_values = sig.bind(*args, **kwargs)
             for name, value in bound_values.arguments.items():
                 if name in bound_types:
                     if not isinstance(value, bound_types[name]):
                         raise TypeError(f'Argument {name} must be {bound_types[name]}')
-            return func(*args, **kwargs)
+            return function(*args, **kwargs)
         return wrapper
     return decorate
 
