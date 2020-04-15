@@ -1,7 +1,23 @@
 from time import perf_counter, strftime
 from urllib.parse import urlparse
-from functools import wraps
+from functools import wraps, partial
+from inspect import signature
+import logging
 import types
+
+
+def conditional_decorator(decoration, member):
+    def decorator(method):
+        predecorated = decoration(method)
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            condition = getattr(self, member)
+            if not condition:
+                return method(*args, **kwargs)
+            return predecorated(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def timer(function):
@@ -13,6 +29,38 @@ def timer(function):
         print(f'{function.__name__!r} finished in: {elapsed}' + " "*20)
         return value
     return wrapper_timer
+
+
+def typeassert(*ty_args, **ty_kwargs):
+    def decorate(func):
+        if not __debug__:
+            return func
+        sig = signature(func)
+        bound_types = sig.bind_partial(*ty_args, **ty_kwargs).arguments
+        @wraps
+        def wrapper(*args, **kwargs):
+            bound_values = sig.bind(*args, **kwargs)
+            for name, value in bound_values.arguments.items():
+                if name in bound_types:
+                    if not isinstance(value, bound_types[name]):
+                        raise TypeError(f'Argument {name} must be {bound_types[name]}')
+            return func(*args, **kwargs)
+        return wrapper
+    return decorate
+
+
+def logged(func=None, *, level=logging.DEBUG, name=None, message=None):
+    if func is None:
+        return partial(logged, level=level, name=name, message=message)
+    logname = name if name else func.__module__
+    logmsg = message if message else func.__name__
+    log = logging.getLogger(logname)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        log.log(level, logmsg)
+        return func(*args, **kwargs)
+    return wrapper
 
 
 class Timer:
@@ -57,16 +105,3 @@ class ResponseTimer(Timer):
         endpoint = endpoint.replace("//", "/")
         print(
             f"{strftime('[%d/%m/%Y %H:%M:%S]')} {self.value.status_code}@{endpoint!r} {self.string_elapsed} ")
-
-def conditional_decorator(decoration, member):
-    def decorator(method):
-        predecorated = decoration(method)
-        @wraps(method)
-        def wrapper(*args, **kwargs):
-            self = args[0]
-            condition = getattr(self, member)
-            if not condition:
-                return method(*args, **kwargs)
-            return predecorated(*args, **kwargs)
-        return wrapper
-    return decorator
