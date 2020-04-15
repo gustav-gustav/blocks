@@ -28,12 +28,15 @@ class Rename:
             f_list = f.split("\\")
             name = f_list[-1]
             _, ext = os.path.splitext(name)
-            new_name = f'{self.expression}{str(i+1).zfill(2)}{optional[i]}{ext}'
+            try:
+                new_name = f'{self.expression}{str(i+1).zfill(2)}{optional[i]}{ext}'
+            except IndexError:
+                new_name = f'{self.expression}{str(i+1).zfill(2)}{ext}'
             new_path = os.path.join(self.main_path, new_name)
-            # try:
-            #     os.rename(f, new_path)
-            # except Exception as e:
-            #     print(str(e))
+            try:
+                os.rename(f, new_path)
+            except Exception as e:
+                print(str(e))
 
     def strip_ep_name(self):
         optional = []
@@ -43,12 +46,10 @@ class Rename:
             ep_name = name.strip((r'"Mr.Robot."(.*?)".720p.WEB-DL.x264-[MULVAcoded]"'))
             ep_name = re.sub(r'^r.', '', ep_name)
             ep_name = re.sub(r"eps2.\d{1,2}(.|_)", "", ep_name)
-            episode = ep_name.split('.')[1]
+            episode = ep_name.split('.')[3]
             optional.append(f".{episode}")
         self.rename(optional)
 
 
-
 if __name__ == "__main__":
-    # Rename(input('Path: \n'), input('File extension: \n'), input('Expression to rename batch to: \n'))
-    Rename("C:\\Users\\Gustavo\\Videos\\Mr.Robot.Season.2.720p", 'mkv', 'Mr.Robot.S02E').strip_ep_name()
+    Rename(input('Path: \n'), input('File extension: \n'), input('Expression to rename batch to: \n'))
