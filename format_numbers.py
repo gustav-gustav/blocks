@@ -25,3 +25,10 @@ def msv(k):
     antes = str(intf).replace(',', '.')
     fn = '{}{}{}'.format(antes, ',', dec)
     return fn
+
+
+def char_remover(string, replacer=''):
+    bad_chars = ['\\', '/', ':', '?', '*', '"', '<', '>', '|']
+    for char in bad_chars:
+        string = string.replace(char, replacer)
+    return string
