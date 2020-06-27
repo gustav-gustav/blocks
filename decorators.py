@@ -101,7 +101,6 @@ class ResponseTimer(Timer):
         if parsed.params:
             endpoint += parsed.params
         if parsed.query:
-            endpoint += parsed.query
+            endpoint += f'?{parsed.query}'
         endpoint = endpoint.replace("//", "/")
-        print(
-            f"{strftime('[%d/%m/%Y %H:%M:%S]')} {self.value.status_code}@{endpoint!r} {self.string_elapsed} ")
+        print(f"{strftime('[%d/%m/%Y %H:%M:%S]')} {self.value.status_code}@{endpoint!r} {self.string_elapsed} ")
